@@ -17,14 +17,19 @@ export class AppService {
     console.log('Fetching user with ID:', id);
     console.log(this.users[id]);
     const user = this.users[id];
-      if (!user) {
-      throw new NotFoundException('User not found');
-    }
+      if (!user)
+        throw new NotFoundException('User not found');
+      else if (id <= 0)
+        throw new BadRequestException('ID must be a positive integer');
     return  user;
   }
 
   createUser(name: string , amount: number) {
     const id = Object.keys(this.users).length + 1;
+    if (amount < 0)
+      throw new BadRequestException('Initial amount must be non-negative');
+    else if (!name || name.trim() === '')
+      throw new BadRequestException('Name is required');
     this.users[id] = { id, name, amount };
     return this.users[id];
   }
@@ -47,9 +52,12 @@ export class AppService {
   transfer(fromId: number, toId: number, amount: number) {
     const fromUser = this.getUserById(fromId);
     const toUser = this.getUserById(toId);
-    if (fromUser.amount < amount) {
+    if (fromUser.amount < amount)
       throw new BadRequestException('Insufficient funds');
-    }
+    else if (fromId === toId)
+      throw new BadRequestException('Cannot transfer to the same account');
+    else if (amount <= 0)
+      throw new BadRequestException('Transfer amount must be positive'); 
     fromUser.amount -= amount;
     toUser.amount += amount;
     return { fromUser, toUser };
